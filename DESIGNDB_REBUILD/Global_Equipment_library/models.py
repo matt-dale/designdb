@@ -71,7 +71,7 @@ class GlobalEquipmentConnection(models.Model):
     parentEquipment = models.ForeignKey(GlobalEquipmentItem)
     connectionType = models.ForeignKey(GlobalConnection, related_name='connection_type')
     name = models.CharField(max_length=100)
-    matesWith = models.ForeignKey(GlobalConnection, related_name='mates_with')
+    matesWith = models.ManyToManyField(GlobalConnection, related_name='mates_with')
 
     def __unicode__(self):
         return self.parentEquipment.description+' '+self.connectionType.name

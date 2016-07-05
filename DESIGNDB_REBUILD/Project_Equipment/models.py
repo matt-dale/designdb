@@ -22,9 +22,11 @@ class ProjectEquipmentItem(models.Model):
     hasMainLabel = models.BooleanField(default=True)
     qtyMainLabel = models.IntegerField(default=1)
     mainLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
+    # if the item is a cable or mult
+    length = models.IntegerField(blank=True, null=True)
 
     def __unicode__(self):
-        return self.project + self.globalEquipment
+        return str(self.project) + str(self.globalEquipment)
 
     @classmethod
     def buildProjectEquipmentItem(cls, project, globalItem=None, **kwargs):
@@ -39,6 +41,7 @@ class ProjectEquipmentItem(models.Model):
         else:
             pEI = cls()
             # set the defaults
+            pEI.project = project
             pEI.globalEquipment = globalItem
             pEI.model = globalItem.model
             pEI.equipmentType = globalItem.equipmentType
@@ -61,14 +64,14 @@ class ProjectEquipmentConnection(models.Model):
     """
     copies the global equipment connections, but allows overriding of both labels and connection types.
     """
-    parentEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='project_parent_equipment')
+    parentEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='project_equipment_connection')
     connectionType = models.ForeignKey(GlobalConnection, related_name='project_connection_type')
     name = models.CharField(max_length=100)
-    matesWith = models.ForeignKey(GlobalConnection, related_name='project_mates_with', null=True, blank=True)
+    matesWith = models.ManyToManyField(GlobalConnection, related_name='project_mates_with', null=True, blank=True)
     defaultLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
 
     def __unicode__(self):
-        return self.parentEquipment + self.name
+        return str(self.parentEquipment) + self.name
 
     @classmethod
     def buildConnectionsFromEquipmentItem(cls, globalItem, pEI, **kwargs):
@@ -77,19 +80,16 @@ class ProjectEquipmentConnection(models.Model):
         pEI is the parent equipment instance, probably given to this function from
         buildProjectEquipmentItem classmethod.   
         """
-        try:
-            connections = globalItem.GlobalEquipmentConnection_set.all()
-            for connection in connections:
-                pEC = cls()
-                pEC.parentEquipment = pEI
-                pEC.connectionType = connection.connectionType
-                pEC.name = connection.name
-                pEC.matesWith = connection.matesWith
-                pEC.defaultLabelSize = connection.connectionType.defaultLabelSize
-                pEC.save()
-            return True
-        except:
-            return False
+        connections = globalItem.globalequipmentconnection_set.all()
+        for connection in connections:
+            pEC = cls()
+            pEC.parentEquipment = pEI
+            pEC.connectionType = connection.connectionType
+            pEC.name = connection.name
+            pEC.defaultLabelSize = connection.connectionType.defaultLabelSize
+            pEC.save()
+            for x in connection.matesWith.all():
+                pEC.matesWith.add(x)
 
 
 class ProjectEquipmentConnectionLabel(models.Model):
