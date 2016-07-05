@@ -33,6 +33,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'Global_Equipment_library.apps.GlobalEquipmentLibraryConfig',
     'Projects.apps.ProjectsConfig',
+    'Project_Equipment.apps.ProjectEquipmentConfig',
+    'Labels.apps.LabelsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

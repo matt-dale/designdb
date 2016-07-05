@@ -51,7 +51,7 @@ class GlobalEquipmentItem(models.Model):
     description = models.CharField(max_length=200)
     equipmentType = models.ForeignKey(GlobalEquipmentCategory)
     manufacturer = models.ForeignKey(GlobalManufacturer, blank=True, null=True)
-    model = models.CharField(max_length=100, blank=True, null=True)
+    model = models.CharField(max_length=100, blank=True)
     # the following fields could be placed in a separate Attributes table
     hasMainLabel = models.BooleanField(default=True)
     qtyMainLabel = models.IntegerField(default=1)

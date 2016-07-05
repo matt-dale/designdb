@@ -16,7 +16,7 @@ class ProjectEquipmentItem(models.Model):
     """
     project = models.ForeignKey(Project, related_name='project')
     globalEquipment = models.ForeignKey(GlobalEquipmentItem, related_name='global_equipment', blank=True, null=True)
-    model = models.CharField(max_length=100, blank=True, null=True)
+    model = models.CharField(max_length=100, blank=True)
     equipmentType = models.ForeignKey(GlobalEquipmentCategory)
     manufacturer = models.ForeignKey(GlobalManufacturer, blank=True, null=True)
     hasMainLabel = models.BooleanField(default=True)
@@ -61,10 +61,10 @@ class ProjectEquipmentConnection(models.Model):
     """
     copies the global equipment connections, but allows overriding of both labels and connection types.
     """
-    parentEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='parent_equipment')
-    connectionType = models.ForeignKey(GlobalConnection, related_name='connection_type')
+    parentEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='project_parent_equipment')
+    connectionType = models.ForeignKey(GlobalConnection, related_name='project_connection_type')
     name = models.CharField(max_length=100)
-    matesWith = models.ForeignKey(GlobalConnection, related_name='mates_with', null=True, blank=True)
+    matesWith = models.ForeignKey(GlobalConnection, related_name='project_mates_with', null=True, blank=True)
     defaultLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
 
     def __unicode__(self):
@@ -100,3 +100,21 @@ class ProjectEquipmentConnectionLabel(models.Model):
     theConnection = models.ForeignKey(ProjectEquipmentConnection, related_name='connection')
     labelTemplate = models.ForeignKey(LabelTemplate, related_name='label_template')
 
+
+"""
+    Suggestions needed here...
+        Perhaps the label is divided into quarters vertically and horizontally.
+        This will have 16 fields to possibly use.
+        Each field will then need attributes for it: fontsize, italics, bold, font type
+"""
+
+class ProjectEquipmentPatchPoint(models.Model):
+    """
+    describes the connection between one item to another
+    uses some validation to make sure the two can be mated.
+    """
+    connectionA = models.ForeignKey(ProjectEquipmentConnection, related_name='connectionA')
+    connectionB = models.ForeignKey(ProjectEquipmentConnection, related_name='connectionB')
+
+    def __unicode__(self):
+        return self.connectionA + '-' + self.connectionB

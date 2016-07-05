@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import User
 
 from django.db import models
+from Labels.models import *
 
 """
 This app combines the Global_Equipment_library with a Project
 """
+
 
 class Venue(models.Model):
     """
@@ -19,9 +21,9 @@ class Venue(models.Model):
     name = models.CharField(max_length=300)
     country = models.CharField(max_length=10)
     streetAddress = models.CharField(max_length=200)
-    streetAddress2 = models.CharField(max_length=200, blank=True, null=True)
+    streetAddress2 = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -37,6 +39,37 @@ class Project(models.Model):
 
     def __unicode__(self):
         return self.description
+
+
+class ProjectSettings(models.Model):
+    """
+    holds defaults for things like labels, etc.
+    """
+    BUNDLES = [('Bundle', 'Bundle'),
+            ('Loom', 'Loom'),
+            ('Multicore', 'Multicore')]
+    project = models.ForeignKey(Project, related_name='projectSettingsProject')
+    smallLabelTemplate = models.ForeignKey(LabelTemplate, related_name='small_label_template')
+    largeLabelTemplate = models.ForeignKey(LabelTemplate, related_name='large_label_template')
+    bundlesLoomsMulticore = models.CharField(max_length=50, choices=BUNDLES) # this will be used heavily to "translate" between bundles/looms/multicores in templates
+    UIStyle = models.CharField(max_length=25, choices=(('Standard', 'Standard'), ('Dark', 'Dark')), default='Standard')
+    lengthUnits = models.CharField(max_length=20, choices=(('feet', 'feet'), ('meters', 'meters')))
+    tagBundleEnds = models.BooleanField(default=False)
+
+
+class ProjectEmployee(models.Model):
+    """
+    used to hold titles and names of people working on the project.
+    TODO: A post_save method will link users to this project to gain read-only access to the project
+    """
+    project = models.ForeignKey(Project)
+    firstName = models.CharField(max_length=100)
+    lastName = models.CharField(max_length=100, blank=True)
+    title = models.CharField(max_length=100)
+    emailAddress = models.EmailField(max_length=200, blank=True)
+
+    def __unicode__(self):
+        return self.firstName + ' ' + self.title
 
 
 class ProjectPermissionGroup(models.Model):
