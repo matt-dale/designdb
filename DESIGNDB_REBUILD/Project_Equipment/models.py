@@ -67,7 +67,7 @@ class ProjectEquipmentConnection(models.Model):
     parentEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='project_equipment_connection')
     connectionType = models.ForeignKey(GlobalConnection, related_name='project_connection_type')
     name = models.CharField(max_length=100)
-    matesWith = models.ManyToManyField(GlobalConnection, related_name='project_mates_with', null=True, blank=True)
+    matesWith = models.ManyToManyField(GlobalConnection, related_name='project_mates_with', blank=True)
     defaultLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
 
     def __unicode__(self):
