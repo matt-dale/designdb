@@ -101,6 +101,13 @@ class ProjectEquipmentConnectionLabel(models.Model):
     labelTemplate = models.ForeignKey(LabelTemplate, related_name='label_template')
 
 
+class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
+    """
+    This holds each piece of text on the label.
+    Inherited from Labels.models
+    """
+    parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='parentLabelObject')
+
 """
     Suggestions needed here...
         Perhaps the label is divided into quarters vertically and horizontally.
