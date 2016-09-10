@@ -39,7 +39,7 @@ class GlobalConnection(models.Model):
     defaultLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
 
     def __unicode__(self):
-        return self.name
+        return self.connectionName + ' '+self.gender+' '+self.connectionType
 
 
 class GlobalEquipmentItem(models.Model):
@@ -75,3 +75,13 @@ class GlobalEquipmentConnection(models.Model):
 
     def __unicode__(self):
         return self.parentEquipment.description+' '+self.connectionType.name
+
+    def validateConnectionMating(self, connectionB):
+        """
+        just a quick method for connection validation,
+        returns Boolean
+        """
+        if connectionB.connectionType in self.matesWith.all():
+            return True
+        else:
+            return False

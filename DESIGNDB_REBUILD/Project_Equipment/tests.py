@@ -48,14 +48,68 @@ class ProjectEquipmentTest(TestCase):
         self.project = Project.objects.create(owner=u, venue=venue, description='test project')
 
     def testCreateProjectEquipment(self):
-        e = GlobalEquipmentItem.objects.get(description='XLR Cable')
-        pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        result = True
+        try:
+            e = GlobalEquipmentItem.objects.get(description='XLR Cable')
+            pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        except:
+            result = False
+        self.assertEqual(result, True)
 
     def testCreateProjectEquipmentConnections(self):
         e = GlobalEquipmentItem.objects.get(description='XLR Cable')
         pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
         cons = pEI.project_equipment_connection.all()
         if cons.count() == 2:
+            result =  True
+        else:
+            result = False
+            print cons
+        self.assertEqual(result, True)
+
+    def testProjectEquipmentPatchPoints(self):
+        """
+        create some equipment then connections. 
+        create a patch point between two connections.
+        """
+        e = GlobalEquipmentItem.objects.get(description='XLR Cable')
+        xlrA = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        xlrA.name = 'xlrA'
+        xlrA.save()
+        xlrB = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        xlrB.name = 'xlrB'
+        xlrB.save()
+        xlrC = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        xlrC.name = 'xlrC'
+        xlrC.save()
+        aToB = ProjectEquipmentPatchPoint.objects.create(connectionA=xlrA.project_equipment_connection.all()[0], 
+                                                        connectionB=xlrB.project_equipment_connection.all()[1])
+        aToC = ProjectEquipmentPatchPoint(connectionA=xlrA.project_equipment_connection.all()[0],
+                                           connectionB=xlrC.project_equipment_connection.all()[1])
+        try: 
+            aToC.save()
+        except ValidationError:
             return True
         else:
-            return cons
+            return False
+
+    def testProjectEquipmentPatchPointMatesWith(self):
+        """
+        create some equipment then connections. 
+        create a patch point between two connections.
+        """
+        e = GlobalEquipmentItem.objects.get(description='XLR Cable')
+        xlrA = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        xlrA.name = 'xlrA'
+        xlrA.save()
+        xlrB = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        xlrB.name = 'xlrB'
+        xlrB.save()
+        try: 
+            aToB = ProjectEquipmentPatchPoint.objects.create(connectionA=xlrA.project_equipment_connection.all()[0], 
+                                                        connectionB=xlrB.project_equipment_connection.all()[0])
+        
+        except ValidationError:
+            return True
+        else:
+            return False

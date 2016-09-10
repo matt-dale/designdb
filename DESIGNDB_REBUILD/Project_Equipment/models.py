@@ -4,6 +4,12 @@ from Projects.models import *
 from Global_Equipment_library.models import *
 from Labels.models import *
 
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
+from django.dispatch import receiver
+from django.db.models import Q
+
+from django.core.exceptions import ValidationError
+
 """
 brings Projects and Equipment together to create project level equipment
 """
@@ -22,11 +28,12 @@ class ProjectEquipmentItem(models.Model):
     hasMainLabel = models.BooleanField(default=True)
     qtyMainLabel = models.IntegerField(default=1)
     mainLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
+    name = models.CharField(max_length=100, blank=True)
     # if the item is a cable or mult
     length = models.IntegerField(blank=True, null=True)
 
     def __unicode__(self):
-        return str(self.project) + str(self.globalEquipment)
+        return str(self.project) + ' ' +str(self.globalEquipment)
 
     @classmethod
     def buildProjectEquipmentItem(cls, project, globalItem=None, **kwargs):
@@ -71,7 +78,7 @@ class ProjectEquipmentConnection(models.Model):
     defaultLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small')
 
     def __unicode__(self):
-        return str(self.parentEquipment) + self.name
+        return str(self.parentEquipment.name) + '-' +self.name
 
     @classmethod
     def buildConnectionsFromEquipmentItem(cls, globalItem, pEI, **kwargs):
@@ -108,12 +115,6 @@ class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
     """
     parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='parentLabelObject')
 
-"""
-    Suggestions needed here...
-        Perhaps the label is divided into quarters vertically and horizontally.
-        This will have 16 fields to possibly use.
-        Each field will then need attributes for it: fontsize, italics, bold, font type
-"""
 
 class ProjectEquipmentPatchPoint(models.Model):
     """
@@ -125,3 +126,25 @@ class ProjectEquipmentPatchPoint(models.Model):
 
     def __unicode__(self):
         return self.connectionA + '-' + self.connectionB
+
+    def save(self, *args, **kwargs):
+        """
+        validates that the connection can be made with the mateswith field,
+        also determines if there is already a patch made to the connection B
+        """
+        # first determine if connection B already has a patch point
+        #projectEquipment = ProjectEquipment.objects.filter(project=self.connectionA.parentEquipment.project)
+        #connections = ProjectEquipmentConnection.objects.filter(parentEquipment__in=projectEquipment)
+        patchPoints = ProjectEquipmentPatchPoint.objects.filter(
+            Q(connectionA=self.connectionA)|Q(connectionB=self.connectionB)|Q(connectionB=self.connectionA)|Q(connectionA=self.connectionB))
+        if patchPoints.count() > 0:
+            validationText = 'Patching Error: '
+            i = patchPoints[0]
+            validationText += '{0} is already patched to {1}'.format(str(i.connectionA), str(i.connectionB))
+            raise ValidationError(validationText)
+        # now determine if these things can be patched together
+        if self.connectionA.connectionType not in self.connectionB.matesWith.all():
+            validationText = "{0} can't be patched with {1}".format(str(self.connectionA.connectionType), str(self.connectionB.connectionType))
+            raise ValidationError(validationText) 
+        else:
+            super(ProjectEquipmentPatchPoint, self).save(*args, **kwargs) # Call the "real" save() method.
