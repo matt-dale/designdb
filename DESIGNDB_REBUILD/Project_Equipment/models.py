@@ -99,6 +99,22 @@ class ProjectEquipmentConnection(models.Model):
                 pEC.matesWith.add(x)
 
 
+class ProjectEquipmentLabel(models.Model):
+    """
+    every equipment item gets its own label
+    """
+    theEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='theEquipment')
+    labelTemplate = models.ForeignKey(LabelTemplate, related_name='labelTemplate')
+
+
+class ProjectEquipmentLabelTextBox(LabelTextBox):
+    """
+    hold the actual text and details for the text on the label
+    """
+    parentLabelObject = models.ForeignKey(ProjectEquipmentLabel)
+
+
+
 class ProjectEquipmentConnectionLabel(models.Model):
     """
     each connection gets a Label instance created for it.
@@ -114,6 +130,28 @@ class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
     Inherited from Labels.models
     """
     parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='parentLabelObject')
+
+
+@receiver(post_save, sender=ProjectEquipmentItem)
+def presaveProjectEquipmentHandler(sender, instance, created, *args, **kwargs):
+    """
+    this autocreates the labels for the piece of equipment
+    """
+    if created == True:
+        # create the labels for the equipment
+        # get the template from the project settings
+        settings = instance.project.projectSettingsProject.all()[0]
+        if instance.hasMainLabel == True:
+            if instance.mainLabelSize == 'Large':
+                pass
+            elif instance.mainLabelSize == 'Small':
+                pass
+            elif instance.mainLabelSize == 'Medium':
+                pass
+            elif instance.mainLabelSize == 'Custom':
+                pass
+        pass
+    return
 
 
 class ProjectEquipmentPatchPoint(models.Model):

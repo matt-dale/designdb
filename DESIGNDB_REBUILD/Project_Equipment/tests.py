@@ -49,12 +49,12 @@ class ProjectEquipmentTest(TestCase):
 
     def testCreateProjectEquipment(self):
         result = True
-        try:
-            e = GlobalEquipmentItem.objects.get(description='XLR Cable')
-            pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
-        except:
-            result = False
-        self.assertEqual(result, True)
+        #try:
+        e = GlobalEquipmentItem.objects.get(description='XLR Cable')
+        pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        #except:
+        result = False
+        #self.assertEqual(result, True)
 
     def testCreateProjectEquipmentConnections(self):
         e = GlobalEquipmentItem.objects.get(description='XLR Cable')
@@ -82,6 +82,7 @@ class ProjectEquipmentTest(TestCase):
         xlrC = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
         xlrC.name = 'xlrC'
         xlrC.save()
+        # this connection pairing only works becuase they are all the same type.  the .all() index won't normally work reliably
         aToB = ProjectEquipmentPatchPoint.objects.create(connectionA=xlrA.project_equipment_connection.all()[0], 
                                                         connectionB=xlrB.project_equipment_connection.all()[1])
         aToC = ProjectEquipmentPatchPoint(connectionA=xlrA.project_equipment_connection.all()[0],

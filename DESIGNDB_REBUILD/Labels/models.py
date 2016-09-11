@@ -24,7 +24,7 @@ class LabelTemplate(models.Model):
     used to keep track of Label types, 
     like Avery 5160, 5167 or the Australian labels and custom labels
     """
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     size = models.CharField(max_length=10, choices=LABEL_SIZES)
 
     def __unicode__(self):

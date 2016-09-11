@@ -4,10 +4,17 @@ from django.contrib.auth.models import User
 
 from django.db import models
 from Labels.models import *
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
+from django.dispatch import receiver
 
 """
 This app combines the Global_Equipment_library with a Project
 """
+
+PERM_GROUPS = [('owner','owner'),
+                ('admin','admin'),
+                ('read', 'read'),
+                ('write', 'write')]
 
 
 class Venue(models.Model):
@@ -51,10 +58,31 @@ class ProjectSettings(models.Model):
     project = models.ForeignKey(Project, related_name='projectSettingsProject')
     smallLabelTemplate = models.ForeignKey(LabelTemplate, related_name='small_label_template')
     largeLabelTemplate = models.ForeignKey(LabelTemplate, related_name='large_label_template')
-    bundlesLoomsMulticore = models.CharField(max_length=50, choices=BUNDLES) # this will be used heavily to "translate" between bundles/looms/multicores in templates
+    mediumLabelTemplate = models.ForeignKey(LabelTemplate, related_name='medium_label_template')
+    bundlesLoomsMulticore = models.CharField(max_length=50, choices=BUNDLES, default='Bundle') # this will be used heavily to "translate" between bundles/looms/multicores in templates
     UIStyle = models.CharField(max_length=25, choices=(('Standard', 'Standard'), ('Dark', 'Dark')), default='Standard')
-    lengthUnits = models.CharField(max_length=20, choices=(('feet', 'feet'), ('meters', 'meters')))
+    lengthUnits = models.CharField(max_length=20, choices=(('feet', 'feet'), ('meters', 'meters')), default='feet')
     tagBundleEnds = models.BooleanField(default=False)
+
+
+@receiver(post_save, sender=Project)
+def postSaveProject(sender, instance, created, *args, **kwargs):
+    """
+    this autocreates the settings object for the project
+    """
+    if created == True:
+        s = ProjectSettings()
+        small, created = LabelTemplate.objects.get_or_create(name='Avery 5167')
+        large, created = LabelTemplate.objects.get_or_create(name='Avery 5160')
+        s.project = instance
+        s.smallLabelTemplate = small
+        s.largeLabelTemplate = large
+        s.mediumLabelTemplate = large
+        s.save()
+        # assign an Project Owner with admin access to the project
+        ppg = ProjectPermissionGroup.objects.create(parentProject=instance, permissionType='owner')
+        ppgm = ProjectPermissionGroupMember.objects.create(permissionGroup=ppg, user=instance.owner)
+    return
 
 
 class ProjectEmployee(models.Model):
@@ -78,7 +106,7 @@ class ProjectPermissionGroup(models.Model):
     The groups will be auto-created when a project is created.
     """
     parentProject = models.ForeignKey(Project)
-    permissionType = models.CharField(max_length=100, default='Read-only')
+    permissionType = models.CharField(max_length=100, choices=PERM_GROUPS, default='read')
 
     def __unicode__(self):
         return self.parentProject.description + ' ' + self.permissionType
