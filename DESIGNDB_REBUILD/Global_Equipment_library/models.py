@@ -42,6 +42,15 @@ class GlobalConnection(models.Model):
         return self.connectionName + ' '+self.gender+' '+self.connectionType
 
 
+class GlobalEquipmentBlockDiagramImage(models.Model):
+    """
+    rather than have a dedicated field on each model, this will
+    enable GlobalEquipmentItems to have the same image (if the item is generic or something)
+    please ensure that this is an SVG
+    """
+    blockImage = models.FileField(upload_to='GlobalEquipmentBlockDiagramImages/')
+
+
 class GlobalEquipmentItem(models.Model):
     """
     This is the template that will be used when adding a piece of equipment to 
@@ -56,6 +65,7 @@ class GlobalEquipmentItem(models.Model):
     hasMainLabel = models.BooleanField(default=True)
     qtyMainLabel = models.IntegerField(default=1)
     mainLabelSize = models.CharField(max_length=50, choices=LABEL_SIZES, default='Small') # how do we deal with custom label templates? 
+    blockDiagramImage = models.ForeignKey(GlobalEquipmentBlockDiagramImage, blank=True, null=True)
 
     def __unicode__(self):
         if self.manufacturer:

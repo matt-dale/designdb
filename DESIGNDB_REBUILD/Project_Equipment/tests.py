@@ -37,6 +37,69 @@ def buildSomeEquipment():
     xlrConB.matesWith.add(xlrMale)
     xlrConB.save()
 
+    # Test of creating an image and adding it to a global equipment item
+
+    anImage = GlobalEquipmentBlockDiagramImage.objects.create(blockImage='test-svgwrite.svg')
+
+    galileo = GlobalEquipmentItem.objects.create(description = 'Galileo 616',
+                                        equipmentType = GlobalEquipmentCategory.objects.get(description='Signal Processing'),
+                                        manufacturer = GlobalManufacturer.objects.all()[0],
+                                        model = 'Galileo 616',
+                                        blockDiagramImage=anImage)
+
+    xlrFPanel = GlobalConnection.objects.create(connectionType='panel mount',
+                                                connectionName='XLR Female Panel Mount',
+                                                gender = 'Female')
+
+    xlrMPanel = GlobalConnection.objects.create(connectionType='panel mount',
+                                                connectionName='XLR Male Panel Mount',
+                                                gender = 'Male')
+
+    galileoA = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input A')
+    galileoA.matesWith.add(xlrMale)
+    galileoA.save()
+
+    galileoB = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input B')
+    galileoB.matesWith.add(xlrMale)
+    galileoB.save()
+
+    galileoC = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input C')
+    galileoC.matesWith.add(xlrMale)
+    galileoC.save()
+
+    galileoD = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input D')
+    galileoD.matesWith.add(xlrMale)
+    galileoD.save()
+
+    galileoE = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input E')
+    galileoE.matesWith.add(xlrMale)
+    galileoE.save()
+
+    galileoF = GlobalEquipmentConnection.objects.create(parentEquipment = galileo,
+                                            connectionType = xlrFPanel,
+                                            name = 'Input F')
+    galileoF.matesWith.add(xlrMale)
+    galileoF.save()
+
+    outputs = 16
+    for x in range(1, outputs):
+        num = str(x)
+        w = GlobalEquipmentConnection.objects.create(parentEquipment=galileo,
+                                                connectionType = xlrMPanel,
+                                                name = 'Output '+num)
+        w.matesWith.add(xlrFemale)
+        w.save()
+
 
 
 
