@@ -83,6 +83,7 @@ class ProjectEquipmentConnection(models.Model):
     def __unicode__(self):
         return str(self.parentEquipment.name) + '-' +self.name
 
+
     @classmethod
     def buildConnectionsFromEquipmentItem(cls, globalItem, pEI, **kwargs):
         """
@@ -100,6 +101,7 @@ class ProjectEquipmentConnection(models.Model):
             pEC.save()
             for x in connection.matesWith.all():
                 pEC.matesWith.add(x)
+
 
 
 
@@ -125,8 +127,8 @@ class ProjectEquipmentLabelTextBox(LabelTextBox):
     """
     hold the actual text and details for the text on the label
     """
-    parentLabelObject = models.ForeignKey(ProjectEquipmentLabel)
-    textvalue = models.ForeignKey(LabelTextBox)
+    parentLabelObject = models.ForeignKey(ProjectEquipmentLabel, related_name='ParentProjectEquipmentLabel')
+    textvalue = models.ForeignKey(LabelTextBox, related_name='ParentProjectEquipmentLabelTextValue')
 
 
 class ProjectEquipmentConnectionLabel(models.Model):
@@ -143,7 +145,9 @@ class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
     This holds each piece of text on the label.
     Inherited from Labels.models
     """
-    parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='parentLabelObject')
+    parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='ParentProjectEquipmentConnectionLabel')
+    textvalue = models.ForeignKey(LabelTextBox, related_name='ConnectionLabelTextValue')
+
 
 
 @receiver(post_save, sender=ProjectEquipmentItem)
@@ -156,15 +160,19 @@ def presaveProjectEquipmentHandler(sender, instance, created, *args, **kwargs):
         # get the template from the project settings
         settings = instance.project.projectSettingsProject.all()[0]
         if instance.hasMainLabel == True:
+            newLabel = ProjectEquipmentLabel(theEquipment=instance)
             if instance.mainLabelSize == 'Large':
-                pass
+                newLabel.labelTemplate = settings.largeLabelTemplate
             elif instance.mainLabelSize == 'Small':
-                pass
+                newLabel.labelTemplate = settings.smallLabelTemplate
             elif instance.mainLabelSize == 'Medium':
-                pass
+                newLabel.labelTemplate = settings.mediumLabelTemplate
             elif instance.mainLabelSize == 'Custom':
                 pass
-        pass
+            newLabel.save()
+        # create the equipment's connection labels
+        for peC in instance.project_equipment_connection.all():
+            newConLabel = ProjectEquipmentConnectionLabel.objects.create(theConnection=peC, labelTemplate=peC.defaultLabelSize)
     return
 
 
