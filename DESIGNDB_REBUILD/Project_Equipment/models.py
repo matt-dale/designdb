@@ -14,6 +14,10 @@ from django.core.exceptions import ValidationError
 brings Projects and Equipment together to create project level equipment
 """
 
+FONT_STYLES = (('regular', 'regular'),
+                ('bold', 'bold'),
+                ('italic', 'italic'),
+                ('underline', 'underline'))
 
 class ProjectEquipmentItem(models.Model):
     """
@@ -66,7 +70,6 @@ class ProjectEquipmentItem(models.Model):
             return pEI
 
 
-
 class ProjectEquipmentConnection(models.Model):
     """
     copies the global equipment connections, but allows overriding of both labels and connection types.
@@ -99,6 +102,17 @@ class ProjectEquipmentConnection(models.Model):
                 pEC.matesWith.add(x)
 
 
+
+"""
+Label Explanation:
+    Labels have templates seen in Labels.models that hold information
+    regarding size, and name
+    Labels can have LabelTextBoxes that actually hold the text and styling
+    of the label text
+    The following models are only used to relate Label Templates and Textboxes 
+    to actual equipment pieces and connections
+"""
+
 class ProjectEquipmentLabel(models.Model):
     """
     every equipment item gets its own label
@@ -112,7 +126,7 @@ class ProjectEquipmentLabelTextBox(LabelTextBox):
     hold the actual text and details for the text on the label
     """
     parentLabelObject = models.ForeignKey(ProjectEquipmentLabel)
-
+    textvalue = models.ForeignKey(LabelTextBox)
 
 
 class ProjectEquipmentConnectionLabel(models.Model):
