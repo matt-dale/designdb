@@ -130,6 +130,24 @@ class ProjectEquipmentTest(TestCase):
             print cons
         self.assertEqual(result, True)
 
+    def testEquipmentLabelTextBoxEdit(self):
+        e = GlobalEquipmentItem.objects.get(description='XLR Cable')  
+        pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        label = ProjectEquipmentLabel.objects.get(theEquipment=pEI)
+        textBox = label.getTextBoxes()[0]
+        currentText = textBox.text
+        textBox.text = 'TESTING'
+        textBox.save()
+        self.assertEqual(textBox.text, 'TESTING')
+
+    def testEquipmentConnectionLabelTextBoxEdit(self):
+        e = GlobalEquipmentItem.objects.get(description='XLR Cable')  
+        pEI = ProjectEquipmentItem.buildProjectEquipmentItem(self.project, e)
+        con = ProjectEquipmentConnection.objects.filter(parentEquipment=pEI)
+        label = ProjectEquipmentConnectionLabel.objects.filter(theConnection__in=con)[0]
+        textBox = label.getTextBoxes()[0]
+
+
     def testProjectEquipmentPatchPoints(self):
         """
         create some equipment then connections. 

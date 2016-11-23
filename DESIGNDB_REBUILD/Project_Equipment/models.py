@@ -93,6 +93,7 @@ class ProjectEquipmentConnection(models.Model):
         """
         connections = globalItem.globalequipmentconnection_set.all()
         for connection in connections:
+            settings = pEI.project.projectSettingsProject.all()[0]
             pEC = cls()
             pEC.parentEquipment = pEI
             pEC.connectionType = connection.connectionType
@@ -101,6 +102,15 @@ class ProjectEquipmentConnection(models.Model):
             pEC.save()
             for x in connection.matesWith.all():
                 pEC.matesWith.add(x)
+                    # create the equipment's connection labels
+            if pEC.defaultLabelSize == 'Large':
+                labelTemplate = settings.largeLabelTemplate
+            elif pEC.defaultLabelSize == 'Small':
+                labelTemplate = settings.smallLabelTemplate
+            elif pEC.defaultLabelSize == 'Medium':
+                labelTemplate = settings.mediumLabelTemplate
+            newConLabel = ProjectEquipmentConnectionLabel.objects.create(theConnection=pEC, labelTemplate=labelTemplate)
+            nCTB = ProjectEquipmentConnectionLabelTextBox.objects.create(parentLabelObject=newConLabel, text=pEC.name)
 
 
 
@@ -122,13 +132,18 @@ class ProjectEquipmentLabel(models.Model):
     theEquipment = models.ForeignKey(ProjectEquipmentItem, related_name='theEquipment')
     labelTemplate = models.ForeignKey(LabelTemplate, related_name='labelTemplate')
 
+    def getTextBoxes(self):
+        """
+        returns all children text boxes
+        """
+        return ProjectEquipmentLabelTextBox.objects.filter(parentLabelObject=self)
 
+        
 class ProjectEquipmentLabelTextBox(LabelTextBox):
     """
     hold the actual text and details for the text on the label
     """
     parentLabelObject = models.ForeignKey(ProjectEquipmentLabel, related_name='ParentProjectEquipmentLabel')
-    textvalue = models.ForeignKey(LabelTextBox, related_name='ParentProjectEquipmentLabelTextValue')
 
 
 class ProjectEquipmentConnectionLabel(models.Model):
@@ -136,8 +151,14 @@ class ProjectEquipmentConnectionLabel(models.Model):
     each connection gets a Label instance created for it.
     This allows overriding the default label outputs on a per Label basis.
     """
-    theConnection = models.ForeignKey(ProjectEquipmentConnection, related_name='connection')
+    theConnection = models.ForeignKey(ProjectEquipmentConnection, related_name='ProjectEquipmentConnectionForLabel')
     labelTemplate = models.ForeignKey(LabelTemplate, related_name='label_template')
+
+    def getTextBoxes(self):
+        """
+        returns all text boxes that are children of this label
+        """
+        return ProjectEquipmentConnectionLabelTextBox.objects.filter(parentLabelObject=self)
 
 
 class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
@@ -146,7 +167,6 @@ class ProjectEquipmentConnectionLabelTextBox(LabelTextBox):
     Inherited from Labels.models
     """
     parentLabelObject = models.ForeignKey(ProjectEquipmentConnectionLabel, related_name='ParentProjectEquipmentConnectionLabel')
-    textvalue = models.ForeignKey(LabelTextBox, related_name='ConnectionLabelTextValue')
 
 
 
@@ -170,10 +190,9 @@ def presaveProjectEquipmentHandler(sender, instance, created, *args, **kwargs):
             elif instance.mainLabelSize == 'Custom':
                 pass
             newLabel.save()
-        # create the equipment's connection labels
-        for peC in instance.project_equipment_connection.all():
-            newConLabel = ProjectEquipmentConnectionLabel.objects.create(theConnection=peC, labelTemplate=peC.defaultLabelSize)
-    return
+            # create a text box
+            nT = ProjectEquipmentLabelTextBox.objects.create(parentLabelObject=newLabel, text=instance.name)
+
 
 
 class ProjectEquipmentPatchPoint(models.Model):

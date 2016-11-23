@@ -35,7 +35,7 @@ class LabelTextBox(models.Model):
     a generic text box that allows settings to be overridden
     """
     text = models.CharField(max_length=100, blank=True)
-    font = models.CharField(max_length=100, choices=FONT_TYPES)
+    font = models.CharField(max_length=100, choices=FONT_TYPES, default='Arial')
     bold = models.BooleanField(default=False)
     italic = models.BooleanField(default=False)
     underline = models.BooleanField(default=False)
